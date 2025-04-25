@@ -30,7 +30,7 @@
   },
   "scripts": {
     "start": "node build/index.js",
-    "build": "tsc",
+    "build": "yarn tsc",
     "dev": "ts-node src/index.ts",
     "postinstall": "./update-domains-list.sh"
   }
