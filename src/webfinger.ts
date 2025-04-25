@@ -25,7 +25,7 @@ export const webfingerRoute: Route<
   Response.Ok<WebfingerResponse> | Response.BadRequest<string>
 > = route
   .use(Parser.query(webfingeQuery))
-  .get("/.well-known/webfinger")
+  .get("/.well-known/webfinger/")
   .handler(async (req) => {
     const account = req.query.resource.slice("acct:".length);
     const [username] = account.split("@");

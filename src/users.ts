@@ -2,7 +2,7 @@ import * as Option from "fp-ts/lib/Option";
 import { Response, Route, route } from "typera-express";
 import { PUBLIC_KEY } from "./env";
 import { fetchUrlInfo } from "./fetch-url-info";
-import { validateHostname } from "./url-parser";
+import { normalizeHostname, validateHostname } from "./url-parser";
 
 type ActivityStreamUserResponse = {
   "@context": [
@@ -36,7 +36,8 @@ export const usersRoute: Route<
   | Response.NotFound
   | Response.BadRequest<string>
 > = route.get("/:hostname").handler(async (req) => {
-  const hostname = (req.routeParams as any).hostname;
+  const rawHostname = (req.routeParams as any).hostname;
+  const hostname = normalizeHostname(rawHostname);
 
   if (!validateHostname(hostname)) {
     return Response.badRequest("Invalid hostname");
