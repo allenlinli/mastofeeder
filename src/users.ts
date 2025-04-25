@@ -36,7 +36,7 @@ export const usersRoute: Route<
   | Response.NotFound
   | Response.BadRequest<string>
 > = route.get("/:hostname").handler(async (req) => {
-  const hostname = req.routeParams.hostname;
+  const hostname = (req.routeParams as any).hostname;
 
   if (!validateHostname(hostname)) {
     return Response.badRequest("Invalid hostname");

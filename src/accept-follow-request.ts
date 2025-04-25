@@ -59,7 +59,7 @@ export const followUnfollowRoute: Route<
   .post("/:hostname/inbox")
   .use(Parser.body(followOrUnfollowRequest))
   .handler(async (req) => {
-    const hostname = req.routeParams.hostname;
+    const hostname = (req.routeParams as any).hostname;
 
     if (!validateHostname(hostname)) {
       return Response.badRequest("Invalid hostname");

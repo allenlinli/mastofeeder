@@ -9,13 +9,13 @@ const app = express();
 
 app.use(bodyParser.json({ type: "application/activity+json" }));
 
+app.use(routes);
+
 app.get("/", (req, res) => {
   res.redirect("https://github.com/jehna/mastofeeder");
 });
 
-app.use(routes);
-
-app.use("*", (req, res) => {
+app.use((req, res) => {
   console.log(req.baseUrl);
   console.dir(req.body, { depth: null });
   res.status(404).send("Not found");
