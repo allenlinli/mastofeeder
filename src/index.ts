@@ -4,35 +4,36 @@ import { PORT } from "./env";
 import { fetchAndSendAllFeeds } from "./fetch-and-send-all-feeds";
 import { forever } from "./forever";
 import { routes } from "./routes";
-import { validateHostname } from "./url-parser";
+import { normalizeHostname } from "./url-parser";
 
 const app = express();
 
-// Parse ActivityPub JSON
 app.use(bodyParser.json({ type: "application/activity+json" }));
 
-// Handle ActivityPub routes
-app.use(routes);
-
-// Handle @ mentions format
-app.get("/@:hostname", (req, res, next) => {
-  const hostname = req.params.hostname;
-  if (hostname && validateHostname(hostname)) {
-    // Forward to the hostname route
-    req.url = `/${hostname}`;
-    next("route");
-  } else {
-    next();
+// Handle @website@mastofeeder.com format
+app.use((req, res, next) => {
+  const path = req.path;
+  if (path.startsWith("/@")) {
+    // Extract the website part from @website@mastofeeder.com
+    const match = path.match(/\/@([^@]+)@/);
+    if (match) {
+      const website = match[1];
+      // Redirect to the normalized hostname path
+      const normalizedPath = `/${normalizeHostname(website)}`;
+      if (normalizedPath !== path) {
+        return res.redirect(302, normalizedPath + req.url.slice(path.length));
+      }
+    }
   }
+  next();
 });
 
-// GitHub redirect only for exact root path
-app.get("/", (req, res) => {
-  if (req.path === "/") {
-    res.redirect(302, "https://github.com/jehna/mastofeeder");
-  } else {
-    res.status(404).send("Not found");
-  }
+// Add routes
+app.use(routes);
+
+// Handle GitHub redirect for root
+app.get("/", (_req, res) => {
+  res.redirect(302, "https://github.com/jehna/mastofeeder");
 });
 
 // Handle 404s

@@ -3,14 +3,17 @@ import { URL as TyperaURL } from "typera-express";
 
 export function validateHostname(hostname: string): boolean {
   try {
-    // Remove @ prefix if present
-    const cleanHostname = hostname.replace(/^@/, "");
-    // Remove domain suffix if present (e.g., @mastofeeder.com)
-    const withoutDomain = cleanHostname.split("@")[0];
+    // Handle @website@mastofeeder.com format
+    if (hostname.startsWith("@")) {
+      const match = hostname.match(/^@([^@]+)@/);
+      if (match) {
+        hostname = match[1];
+      }
+    }
     // Remove .rss and .xml extensions
-    const withoutExt = withoutDomain.replace(/\.(rss|xml)$/, "");
+    const cleanHostname = hostname.replace(/\.(rss|xml)$/, "");
     // Convert slashes to dots
-    const normalizedHostname = withoutExt.replace(/\//g, ".");
+    const normalizedHostname = cleanHostname.replace(/\//g, ".");
     // Try to create a URL to validate
     new URL(`https://${normalizedHostname}`);
     return true;
@@ -20,14 +23,17 @@ export function validateHostname(hostname: string): boolean {
 }
 
 export function normalizeHostname(hostname: string): string {
-  // Remove @ prefix if present
-  const cleanHostname = hostname.replace(/^@/, "");
-  // Remove domain suffix if present (e.g., @mastofeeder.com)
-  const withoutDomain = cleanHostname.split("@")[0];
+  // Handle @website@mastofeeder.com format
+  if (hostname.startsWith("@")) {
+    const match = hostname.match(/^@([^@]+)@/);
+    if (match) {
+      hostname = match[1];
+    }
+  }
   // Remove .rss and .xml extensions
-  const withoutExt = withoutDomain.replace(/\.(rss|xml)$/, "");
+  const cleanHostname = hostname.replace(/\.(rss|xml)$/, "");
   // Convert slashes to dots
-  return withoutExt.replace(/\//g, ".");
+  return cleanHostname.replace(/\//g, ".");
 }
 
 export const urlParser: TyperaURL.Conversion<string> = (s: string) => {
