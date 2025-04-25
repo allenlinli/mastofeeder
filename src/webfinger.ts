@@ -1,7 +1,7 @@
-import { Route, route, Parser, Response } from "typera-express";
-import * as t from "io-ts";
-import { fetchUrlInfo } from "./fetch-url-info";
 import * as Option from "fp-ts/lib/Option";
+import * as t from "io-ts";
+import { Parser, Response, Route, route } from "typera-express";
+import { fetchUrlInfo } from "./fetch-url-info";
 
 const webfingeQuery = t.type({
   resource: t.refinement(
@@ -24,14 +24,13 @@ type WebfingerResponse = {
 export const webfingerRoute: Route<
   Response.Ok<WebfingerResponse> | Response.BadRequest<string>
 > = route
-  .use(Parser.query(webfingeQuery))
   .get("/.well-known/webfinger")
+  .use(Parser.query(webfingeQuery))
   .handler(async (req) => {
     const account = req.query.resource.slice("acct:".length);
     const [username] = account.split("@");
     const urlInfo = await fetchUrlInfo(username);
 
-    console.log(username);
     return Response.ok({
       subject: req.query.resource,
       aliases: [],
@@ -41,7 +40,7 @@ export const webfingerRoute: Route<
               rel: "self",
               type: "application/activity+json",
               href: `https://${req.req.hostname}/${encodeURIComponent(
-                username.toLocaleLowerCase() // Needs normalization because Mastodon normalizes to lowercase
+                username.toLowerCase() // Needs normalization because Mastodon normalizes to lowercase
               )}`,
             },
           ]

@@ -30,5 +30,8 @@
     "build": "yarn tsc",
     "dev": "ts-node src/index.ts",
     "postinstall": "./update-domains-list.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.2"
   }
 }

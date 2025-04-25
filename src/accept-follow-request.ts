@@ -1,18 +1,18 @@
-import SQL from "sql-template-strings";
-import { Route, route, Response, Parser } from "typera-express";
-import { urlParser } from "./url-parser";
-import * as t from "io-ts";
-import { fetchUrlInfo } from "./fetch-url-info";
 import * as Option from "fp-ts/lib/Option";
-import { openDb } from "./db";
+import * as t from "io-ts";
+import SQL from "sql-template-strings";
+import { Parser, Response, Route, route } from "typera-express";
 import { v4 as uuid } from "uuid";
-import { send } from "./send";
 import { ActivityPubMessage } from "./ActivityPubMessage";
+import { openDb } from "./db";
 import { serverHostname } from "./env";
+import { fetchUrlInfo } from "./fetch-url-info";
+import { send } from "./send";
+import { validateHostname } from "./url-parser";
 
 const activityStreamsContext = t.union([
   t.literal("https://www.w3.org/ns/activitystreams"),
-  t.UnknownArray
+  t.UnknownArray,
 ]);
 
 const followRequest = t.type({
@@ -56,14 +56,19 @@ const acceptActivity = (
 export const followUnfollowRoute: Route<
   Response.Ok | Response.BadRequest<string>
 > = route
-  .useParamConversions({ url: urlParser })
-  .post("/:hostname(url)/inbox")
+  .post("/:hostname/inbox")
   .use(Parser.body(followOrUnfollowRequest))
   .handler(async (req) => {
+    const hostname = req.routeParams.hostname;
+
+    if (!validateHostname(hostname)) {
+      return Response.badRequest("Invalid hostname");
+    }
+
     if (req.body.type === "Follow")
-      return handleFollowRequest(req.body, req.routeParams.hostname);
+      return handleFollowRequest(req.body, hostname);
     if (req.body.type === "Undo")
-      return handleUnfollowRequest(req.body, req.routeParams.hostname);
+      return handleUnfollowRequest(req.body, hostname);
 
     throw new Error("Unreachable");
   });
@@ -79,7 +84,7 @@ const handleFollowRequest = async (
     return Response.badRequest("Object does not match username");
 
   const info = await fetchUrlInfo(followHostname);
-  if (Option.isNone(info) === null)
+  if (Option.isNone(info))
     return Response.badRequest("Domain does not have a feed");
 
   try {

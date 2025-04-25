@@ -1,19 +1,19 @@
-import express from "express";
 import bodyParser from "body-parser";
-import { routes } from "./routes";
+import express from "express";
+import { PORT } from "./env";
 import { fetchAndSendAllFeeds } from "./fetch-and-send-all-feeds";
 import { forever } from "./forever";
-import { PORT } from "./env";
+import { routes } from "./routes";
 
 const app = express();
 
 app.use(bodyParser.json({ type: "application/activity+json" }));
 
-app.use(routes);
-
 app.get("/", (req, res) => {
   res.redirect("https://github.com/jehna/mastofeeder");
 });
+
+app.use(routes);
 
 app.use("*", (req, res) => {
   console.log(req.baseUrl);
@@ -23,6 +23,5 @@ app.use("*", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  forever(60 * 1000, fetchAndSendAllFeeds);
 });
-
-forever(1000 * 60 * 60, fetchAndSendAllFeeds);
